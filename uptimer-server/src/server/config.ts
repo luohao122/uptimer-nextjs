@@ -12,3 +12,5 @@ export const SENDER_EMAIL = env.SENDER_EMAIL as string;
 export const SENDER_EMAIL_PASSWORD = env.SENDER_EMAIL_PASSWORD as string;
 export const CLIENT_URL = env.CLIENT_URL as string;
 export const PORT = env.PORT as string;
+
+export const DEFAULT_GROUP = "Default Contact Group";
