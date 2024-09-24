@@ -156,6 +156,7 @@ class HttpMonitor {
     ]);
 
     if (!this.noSuccessAlert) {
+      this.errorCount = 0;
       this.noSuccessAlert = true;
     }
     logger.info(

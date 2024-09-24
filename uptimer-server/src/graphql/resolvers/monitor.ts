@@ -26,7 +26,9 @@ import {
   appTimeZone,
   authenticateGraphQLRoute,
   resumeMonitors,
+  uptimePercentage,
 } from "@app/utils/utils";
+import { IHeartbeat } from "@app/interfaces/heartbeat.interface";
 
 export const pubSub: PubSub = new PubSub();
 
@@ -259,7 +261,7 @@ export const MonitorResolver = {
     notifications: (monitor: IMonitorDocument) => {
       return getSingleNotificationGroup(monitor.notificationId!);
     },
-    heartbeats: async (monitor: IMonitorDocument) => {
+    heartbeats: async (monitor: IMonitorDocument): Promise<IHeartbeat[]> => {
       const heartbeats = await getHeartbeats(
         monitor.type as "http" | "tcp" | "mongodb" | "redis",
         monitor.id!,
@@ -267,6 +269,15 @@ export const MonitorResolver = {
       );
 
       return heartbeats.slice(0, 16);
+    },
+    uptime: async (monitor: IMonitorDocument): Promise<number> => {
+      const heartbeats = await getHeartbeats(
+        monitor.type as "http" | "tcp" | "mongodb" | "redis",
+        monitor.id!,
+        24
+      );
+      const uptime: number = uptimePercentage(heartbeats);
+      return uptime;
     },
   },
   Subscription: {

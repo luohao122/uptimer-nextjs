@@ -1,14 +1,22 @@
 import { Model, Op } from "sequelize";
+import dayjs from "dayjs";
+import { toLower } from "lodash";
 
 import { IMonitorDocument } from "@app/interfaces/monitor.interface";
 import { MonitorModel } from "@app/models/monitor.model";
 import { getSingleNotificationGroup } from "./notification.service";
 
 import { INotificationDocument } from "@app/interfaces/notification.interface";
-import dayjs from "dayjs";
 import { getHttpHeartBeatsByDuration, httpStatusMonitor } from "./http.service";
-import { toLower } from "lodash";
 import { IHeartbeat } from "@app/interfaces/heartbeat.interface";
+
+import { uptimePercentage } from "@app/utils/utils";
+import { HttpModel } from "@app/models/http.model";
+import {
+  getMongoHeartBeatsByDuration,
+  mongoStatusMonitor,
+} from "./mongo.service";
+import { MongoModel } from "@app/models/mongo.model";
 
 const HTTP_TYPE = "http";
 const TCP_TYPE = "tcp";
@@ -84,9 +92,10 @@ export const getUserActiveMonitors = async (
         monitor.id!,
         24
       );
+      const uptime: number = uptimePercentage(heartbeats);
       monitor = {
         ...monitor,
-        uptime: 0,
+        uptime,
         heartbeats: heartbeats.slice(0, 16),
         notifications: group,
       };
@@ -285,7 +294,7 @@ export const getHeartbeats = async (
     console.log("tcp");
   }
   if (type === MONGO_TYPE) {
-    console.log("mongodb");
+    heartbeats = await getMongoHeartBeatsByDuration(monitorId, duration);
   }
   if (type === REDIS_TYPE) {
     console.log("redis");
@@ -306,7 +315,7 @@ export const startCreatedMonitors = (
     console.log("tcp", monitor.name, name);
   }
   if (type === MONGO_TYPE) {
-    console.log("mongodb", monitor.name, name);
+    mongoStatusMonitor(monitor!, toLower(name));
   }
   if (type === REDIS_TYPE) {
     console.log("redis", monitor.name, name);
@@ -317,5 +326,23 @@ const deleteMonitorTypeHeartbeats = async (
   monitorId: number,
   type: string
 ): Promise<void> => {
-  console.log(monitorId, type);
+  let model = null;
+  if (type === HTTP_TYPE) {
+    model = HttpModel;
+  }
+  if (type === TCP_TYPE) {
+    console.log("tcp");
+  }
+  if (type === MONGO_TYPE) {
+    model = MongoModel;
+  }
+  if (type === REDIS_TYPE) {
+    console.log("redis");
+  }
+
+  if (model !== null) {
+    await model.destroy({
+      where: { monitorId },
+    });
+  }
 };

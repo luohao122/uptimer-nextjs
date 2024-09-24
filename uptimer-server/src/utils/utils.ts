@@ -17,6 +17,7 @@ import {
 import { startSingleJob } from "./jobs";
 import { pubSub } from "@app/graphql/resolvers/monitor";
 import logger from "@app/server/logger";
+import { IHeartbeat } from "@app/interfaces/heartbeat.interface";
 
 export const appTimeZone: string =
   Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -137,6 +138,26 @@ export const encodeBase64 = (user: string, password: string): string => {
   return Buffer.from(`${user || ""}:${password || ""}`).toString("base64");
 };
 
+export const uptimePercentage = (heartbeats: IHeartbeat[]): number => {
+  if (!heartbeats.length) {
+    return 0;
+  }
+  const totalHeartbeats: number = heartbeats.length;
+  const downtimeHeartbeats: number = heartbeats.filter(
+    (heartbeat: IHeartbeat) => heartbeat.status === 1
+  ).length;
+  return (
+    Math.round(
+      ((totalHeartbeats - downtimeHeartbeats) / totalHeartbeats) * 100
+    ) || 0
+  );
+};
+
+/**
+ * Get all key/values in cookie
+ * @param cookie
+ * @returns {Record<string, string>}
+ */
 const getCookies = (cookie: string): Record<string, string> => {
   const cookies: Record<string, string> = {};
   cookie.split(";").forEach((cookieData) => {
