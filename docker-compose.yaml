@@ -21,3 +21,13 @@ services:
       - 27017:27017
     volumes:
       - ./docker-volumes/data:/data/db
+
+  redis:
+    container_name: redis_uptimer_container
+    image: redis:alpine
+    restart: always
+    ports:
+      - 6379:6379
+    command: redis-server --loglevel warning
+    volumes:
+      - ./docker-volumes/cache:/data

@@ -7,18 +7,21 @@ import {
   updateMonitorStatus,
 } from "@app/services/monitor.service";
 
-import { encodeBase64 } from "@app/utils/utils";
+import { emailSender, encodeBase64, locals } from "@app/utils/utils";
 import { IHeartbeat } from "@app/interfaces/heartbeat.interface";
 import dayjs from "dayjs";
 import { createHttpHeartBeat } from "@app/services/http.service";
+import { IEmailLocals } from "@app/interfaces/notification.interface";
 
 class HttpMonitor {
   errorCount: number;
   noSuccessAlert: boolean;
+  emailsLocals: IEmailLocals;
 
   constructor() {
     this.errorCount = 0;
     this.noSuccessAlert = true;
+    this.emailsLocals = locals();
   }
 
   async start(data: IMonitorDocument): Promise<void> {
@@ -40,6 +43,7 @@ class HttpMonitor {
 
     try {
       const monitorData: IMonitorDocument = await getMonitorById(monitorId!);
+      this.emailsLocals.appName = monitorData.name;
       let basicAuthHeader = {};
 
       if (httpAuthMethod === "basic") {
@@ -84,7 +88,7 @@ class HttpMonitor {
 
       const response: AxiosResponse = await axios.request(options);
       const responseTime = Date.now() - startTime;
-      const heartbeatData: IHeartbeat = {
+      let heartbeatData: IHeartbeat = {
         monitorId: monitorId!,
         status: 0,
         code: response.status ?? 0,
@@ -112,7 +116,11 @@ class HttpMonitor {
         (contentTypeList.length > 0 &&
           !contentTypeList.includes(response.headers["content-type"]))
       ) {
-        heartbeatData.message = "Failed http assertion";
+        heartbeatData = {
+          ...heartbeatData,
+          status: 1,
+          message: "Failed http assertion",
+        };
         this.errorAssertionCheck(monitorData, heartbeatData);
       } else {
         this.successAssertionCheck(monitorData, heartbeatData);
@@ -140,6 +148,11 @@ class HttpMonitor {
     ) {
       this.errorCount = 0;
       this.noSuccessAlert = false;
+      emailSender(
+        monitorData.notifications!.emails,
+        "errorStatus",
+        this.emailsLocals
+      );
     }
     logger.info(
       `HTTP heartbeat failed assertion: Monitor ID ${monitorData.id}`
@@ -158,6 +171,11 @@ class HttpMonitor {
     if (!this.noSuccessAlert) {
       this.errorCount = 0;
       this.noSuccessAlert = true;
+      emailSender(
+        monitorData.notifications!.emails,
+        "successStatus",
+        this.emailsLocals
+      );
     }
     logger.info(
       `HTTP heartbeat success assertion: Monitor ID ${monitorData.id}`
@@ -200,6 +218,11 @@ class HttpMonitor {
     ) {
       this.errorCount = 0;
       this.noSuccessAlert = false;
+      emailSender(
+        monitorData.notifications!.emails,
+        "errorStatus",
+        this.emailsLocals
+      );
     }
     logger.info(`HTTP monitor failed: Monitor ID ${monitorData.id}`);
   }

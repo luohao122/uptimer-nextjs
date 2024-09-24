@@ -13,21 +13,25 @@ import {
 import { IHeartbeat } from "@app/interfaces/heartbeat.interface";
 import { mongodbPing } from "./monitors";
 import { createMongoHeartBeat } from "@app/services/mongo.service";
+import { IEmailLocals } from "@app/interfaces/notification.interface";
+import { emailSender, locals } from "@app/utils/utils";
 
 class MongoMonitor {
   errorCount: number;
   noSuccessAlert: boolean;
+  emailsLocals: IEmailLocals;
 
   constructor() {
     this.errorCount = 0;
     this.noSuccessAlert = true;
+    this.emailsLocals = locals();
   }
 
   async start(data: IMonitorDocument): Promise<void> {
     const { monitorId, url } = data;
     try {
       const monitorData: IMonitorDocument = await getMonitorById(monitorId!);
-
+      this.emailsLocals.appName = monitorData.name;
       const response: IMonitorResponse = await mongodbPing(url!);
       if (monitorData.connection !== response.status) {
         this.errorAssertionCheck(response.responseTime, monitorData);
@@ -66,6 +70,11 @@ class MongoMonitor {
     ) {
       this.errorCount = 0;
       this.noSuccessAlert = false;
+      emailSender(
+        monitorData.notifications!.emails,
+        "errorStatus",
+        this.emailsLocals
+      );
     }
     logger.info(
       `MongoDB heartbeat failed assertion: Monitor ID ${monitorData.id}`
@@ -94,6 +103,11 @@ class MongoMonitor {
     if (!this.noSuccessAlert) {
       this.errorCount = 0;
       this.noSuccessAlert = true;
+      emailSender(
+        monitorData.notifications!.emails,
+        "successStatus",
+        this.emailsLocals
+      );
     }
     logger.info(
       `MongoDB heartbeat success assertion: Monitor ID ${monitorData.id}`
@@ -127,6 +141,11 @@ class MongoMonitor {
     ) {
       this.errorCount = 0;
       this.noSuccessAlert = false;
+      emailSender(
+        monitorData.notifications!.emails,
+        "errorStatus",
+        this.emailsLocals
+      );
     }
     logger.info(`MongoDB monitor failed: Monitor ID ${monitorData.id}`);
   }
