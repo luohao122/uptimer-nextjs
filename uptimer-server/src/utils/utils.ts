@@ -22,9 +22,23 @@ import { IHeartbeat } from "@app/interfaces/heartbeat.interface";
 import { IEmailLocals } from "@app/interfaces/notification.interface";
 
 import { sendEmail } from "./email";
+import {
+  getAllUserActiveSSLMonitors,
+  getSSLMonitorById,
+  sslStatusMonitor,
+} from "@app/services/ssl.service";
+import { ISSLMonitorDocument } from "@app/interfaces/ssl.interface";
 
 export const appTimeZone: string =
   Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+export const locals = (): IEmailLocals => {
+  return {
+    appLink: `${CLIENT_URL}`,
+    appIcon: "https://ibb.com/jD45fqX",
+    appName: "",
+  };
+};
 
 /**
  * Email validator
@@ -82,6 +96,10 @@ export const getRandomInt = (min: number, max: number): number => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
+/**
+ * Starts all active monitors
+ * @returns {Promise<void>}
+ */
 export const startMonitors = async (): Promise<void> => {
   const list: IMonitorDocument[] = await getAllUserActiveMonitors();
 
@@ -95,6 +113,24 @@ export const startMonitors = async (): Promise<void> => {
   }
 };
 
+/**
+ * Starts all active ssl monitors
+ * @returns {Promise<void>}
+ */
+export const startSSLMonitors = async (): Promise<void> => {
+  const list: ISSLMonitorDocument[] = await getAllUserActiveSSLMonitors();
+
+  for (const monitor of list) {
+    sslStatusMonitor(monitor, toLower(monitor.name));
+    await sleep(getRandomInt(300, 1000));
+  }
+};
+
+/**
+ * Resumes a single monitor
+ * @param monitorId
+ * @returns {Promise<void>}
+ */
 export const resumeMonitors = async (monitorId: number): Promise<void> => {
   const monitor: IMonitorDocument = await getMonitorById(monitorId);
 
@@ -103,6 +139,18 @@ export const resumeMonitors = async (monitorId: number): Promise<void> => {
     toLower(monitor.name),
     monitor.type as "http" | "tcp" | "mongodb" | "redis"
   );
+  await sleep(getRandomInt(300, 1000));
+};
+
+/**
+ * Resumes a single ssl monitor
+ * @param monitorId
+ * @returns {Promise<void>}
+ */
+export const resumeSSLMonitors = async (monitorId: number): Promise<void> => {
+  const monitor: ISSLMonitorDocument = await getSSLMonitorById(monitorId);
+
+  sslStatusMonitor(monitor, toLower(monitor.name));
   await sleep(getRandomInt(300, 1000));
 };
 
@@ -168,12 +216,23 @@ export const emailSender = async (
   }
 };
 
-export const locals = (): IEmailLocals => {
-  return {
-    appLink: `${CLIENT_URL}`,
-    appIcon: "https://ibb.com/jD45fqX",
-    appName: "",
-  };
+/**
+ * Get number of days between two dates
+ * @param {Date} start Start date
+ * @param {Date} end End date
+ * @returns {number} Number of days
+ */
+export const getDaysBetween = (start: Date, end: Date): number => {
+  return Math.round(Math.abs(+start - +end) / (1000 * 60 * 60 * 24));
+};
+
+export const getDaysRemaining = (start: Date, end: Date): number => {
+  const daysRemaining = getDaysBetween(start, end);
+  if (new Date(end).getTime() < new Date().getTime()) {
+    return -daysRemaining;
+  }
+
+  return daysRemaining;
 };
 
 /**

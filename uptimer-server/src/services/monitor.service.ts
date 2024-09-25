@@ -267,7 +267,7 @@ export const updateMonitorStatus = async (
  * @param monitorId
  * @param userId
  * @param type
- * @returns {Promise<IMonitorDocument>}
+ * @returns {Promise<IMonitorDocument[]>}
  */
 export const deleteSingleMonitor = async (
   monitorId: number,
