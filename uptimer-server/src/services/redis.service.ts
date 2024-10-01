@@ -9,7 +9,6 @@ import { appTimeZone } from "@app/utils/utils";
 import { RedisModel } from "@app/models/redis.model";
 import { redisMonitor } from "@app/monitors/redis.monitor";
 
-
 export const createRedisHeartBeat = async (
   data: IHeartbeat
 ): Promise<IHeartbeat> => {

@@ -1,0 +1,90 @@
+"use client";
+
+import {
+  ApolloClient,
+  ApolloLink,
+  createHttpLink,
+  InMemoryCache,
+  NormalizedCacheObject,
+  split,
+} from "@apollo/client";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { getMainDefinition } from "@apollo/client/utilities";
+import { CachePersistor, LocalStorageWrapper } from "apollo3-cache-persist";
+import { DocumentNode, Kind, OperationTypeNode } from "graphql";
+
+import { createClient } from "graphql-ws";
+
+const httpUrl: string = "http://localhost:5002/graphql";
+const wsUrl: string = "ws://localhost:5002/graphql";
+
+const httpLink: ApolloLink = createHttpLink({
+  uri: httpUrl,
+  credentials: "include",
+});
+
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: wsUrl,
+    retryAttempts: 20,
+    shouldRetry: () => true,
+    on: {
+      closed: () => {
+        console.log("Client closed");
+      },
+      connected: () => {
+        console.log("Client connected");
+      },
+    },
+  })
+);
+
+// The split function takes three parameters:
+//
+// * A function that's called for each operation to execute
+// * The Link to use for an operation if the function returns a "truthy" value
+// * The Link to use for an operation if the function returns a "falsy" value
+// const splitLink = split(
+//   ({ query }) => {
+//     const definition = getMainDefinition(query);
+//     return (
+//       definition.kind === Kind.OPERATION_DEFINITION &&
+//       definition.operation === OperationTypeNode.SUBSCRIPTION
+//     );
+//   },
+//   wsLink,
+//   httpLink
+// );
+
+const cache: InMemoryCache = new InMemoryCache();
+let apolloPersistor: CachePersistor<NormalizedCacheObject> | null = null;
+
+const initPersistorCache = async (): Promise<void> => {
+  if (typeof window !== "undefined") {
+    apolloPersistor = new CachePersistor({
+      cache,
+      storage: new LocalStorageWrapper(window.localStorage),
+      debug: false,
+      trigger: "write",
+    });
+    await apolloPersistor.restore();
+  }
+};
+
+initPersistorCache();
+
+const apolloClient: ApolloClient<NormalizedCacheObject> = new ApolloClient({
+  link: split(isSubscription, wsLink, httpLink),
+  cache,
+  connectToDevTools: true,
+});
+
+function isSubscription({ query }: { query: DocumentNode }): boolean {
+  const definition = getMainDefinition(query);
+  return (
+    definition.kind === Kind.OPERATION_DEFINITION &&
+    definition.operation === OperationTypeNode.SUBSCRIPTION
+  );
+}
+
+export { apolloClient, apolloPersistor };

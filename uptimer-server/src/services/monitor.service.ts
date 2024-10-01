@@ -92,7 +92,7 @@ export const getUserActiveMonitors = async (
     const monitors: IMonitorDocument[] = await getUserMonitors(userId, true);
     for (let monitor of monitors) {
       const group: INotificationDocument = (await getSingleNotificationGroup(
-        monitor.monitorId!
+        monitor.notificationId!
       )) as INotificationDocument;
       heartbeats = await getHeartbeats(
         monitor.type as "http" | "tcp" | "mongodb" | "redis",

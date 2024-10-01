@@ -54,7 +54,7 @@ export const sslMonitorSchema = buildSchema(`#graphql
 
   type Query {
     getSingleSSLMonitor(monitorId: String!): SSLMonitorResponse
-    getUserSSLMonitor(userId: String!): SSLMonitorResponse
+    getUserSSLMonitors(userId: String!): SSLMonitorResponse
   }
 
   type Mutation {

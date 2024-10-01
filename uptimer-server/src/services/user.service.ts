@@ -63,10 +63,6 @@ export async function getUserBySocialId(
       },
     })) as IUserDocument | null;
 
-    if (!user) {
-      throw new Error(`getUserBySocialId() method - User not found`);
-    }
-
     return user;
   } catch (error) {
     throw new Error(error);

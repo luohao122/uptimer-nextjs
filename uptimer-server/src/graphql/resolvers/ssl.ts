@@ -46,7 +46,7 @@ export const SSLMonitorResolver = {
         sslMonitors: [monitor],
       };
     },
-    async getUserSSLMonitor(
+    async getUserSSLMonitors(
       _: undefined,
       { userId }: { userId: string },
       contextValue: AppContext
