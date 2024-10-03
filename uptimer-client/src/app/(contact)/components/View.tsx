@@ -39,9 +39,7 @@ const ContactGroupView: FC = (): ReactElement => {
             </thead>
             <tbody>
               {notifications.map((notification: INotification) => {
-                const emailsGroup = JSON.parse(
-                  JSON.stringify(notification.emails)
-                );
+                const emailsGroup = JSON.parse(notification.emails);
 
                 return (
                   <tr key={notification.id} className="bg-white">

@@ -27,9 +27,9 @@ export async function getSingleNotificationGroup(
         order: [["createdAt", "DESC"]],
       })) as INotificationDocument | null;
 
-    if (!notifications) {
-      throw new Error(`Notification with ID ${notificationId} not found`);
-    }
+    // if (!notifications) {
+    //   throw new Error(`Notification with ID ${notificationId} not found`);
+    // }
 
     return notifications;
   } catch (error) {
