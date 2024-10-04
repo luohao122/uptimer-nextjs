@@ -62,7 +62,7 @@ export const useRegister = (): IUserAuth => {
         showErrorToast("Invalid credentials");
       }
     },
-    [registerUser, router]
+    [dispatch, registerUser, router]
   );
 
   return {
@@ -151,7 +151,7 @@ async function submitUserData(
       });
       router.push("/status");
     }
-  } catch (error) {
+  } catch {
     showErrorToast("Invalid credentials");
   }
 }

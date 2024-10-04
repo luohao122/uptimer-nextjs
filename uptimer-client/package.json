@@ -2,11 +2,15 @@
   "name": "uptimer-client",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
+  },
+  "engines": {
+    "node": ">=20.x"
   },
   "dependencies": {
     "@apollo/client": "^3.11.8",

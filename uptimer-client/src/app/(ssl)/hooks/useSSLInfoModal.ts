@@ -31,7 +31,7 @@ export const useSSLInfoModal = (
   const validityInfo: SSLModalDataProp[] = [
     { key: "Issue Date", value: formatDate(sslInfo.info.validFrom!) },
     { key: "Expiry Date", value: formatDate(sslInfo.info.validTo!) },
-    { key: "Days Left", value: `${sslInfo.info.daysLeft}` ?? "-" },
+    { key: "Days Left", value: `${sslInfo.info.daysLeft}` || "-" },
   ];
 
   function formatDate(date: string): string {

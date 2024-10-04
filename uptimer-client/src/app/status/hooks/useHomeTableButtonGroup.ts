@@ -23,7 +23,6 @@ export const useHomeTableButtonGroup = ({
 }): IUserHomeTableButtonGroupProps => {
   const {
     state: { user },
-    dispatch,
   } = useContext(MonitorContext);
   const [toggleMonitor] = useMutation(TOGGLE_MONITOR);
   const [deleteMonitor] = useMutation(DELETE_MONITOR, {

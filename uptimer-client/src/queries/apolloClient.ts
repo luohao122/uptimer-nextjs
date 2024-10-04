@@ -15,8 +15,14 @@ import { DocumentNode, Kind, OperationTypeNode } from "graphql";
 
 import { createClient } from "graphql-ws";
 
-const httpUrl: string = "http://localhost:5002/graphql";
-const wsUrl: string = "ws://localhost:5002/graphql";
+const httpUrl: string =
+  process.env.NEXT_PUBLIC_NODE_ENV === "development"
+    ? "http://localhost:5002/graphql"
+    : `${process.env.NEXT_PUBLIC_HTTP_SERVER_URL}/graphql`;
+const wsUrl: string =
+  process.env.NEXT_PUBLIC_NODE_ENV === "development"
+    ? "ws://localhost:5002/graphql"
+    : `${process.env.NEXT_PUBLIC_WS_SERVER_URL}/graphql`;
 
 const httpLink: ApolloLink = createHttpLink({
   uri: httpUrl,
